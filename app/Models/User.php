@@ -19,7 +19,9 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
+        'phone_number',
         'email',
         'password',
     ];
@@ -50,5 +52,10 @@ class User extends Authenticatable
     public function posts()
     {
         return $this->hasMany(Post::class);
+    }
+
+    public function banners()
+    {
+        return $this->hasMany(Banner::class);
     }
 }

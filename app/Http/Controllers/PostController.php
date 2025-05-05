@@ -26,7 +26,9 @@ class PostController extends Controller implements HasMiddleware
     {
        $fields = $request->validate([
             'title' => 'required|max:255',
-            'body' => 'required'
+            'body' => 'required',
+            'user_id' => 'required',
+            'banner_id' => 'required',
        ]);
 
       
@@ -58,7 +60,7 @@ class PostController extends Controller implements HasMiddleware
       
 
       $post -> update($fields);
-       return ["success" => true,$post];
+       return ["success" => true,"data" => $post];
     }
 
     /**
