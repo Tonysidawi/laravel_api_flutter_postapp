@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BannerRequest;
+use App\Http\Requests\UpdateBannerRequest;
 use App\Models\Banner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -40,22 +42,19 @@ class BannerController extends Controller implements HasMiddleware
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        $fields = $request->validate([
-            'title' => 'required|max:255',
-            'body' => 'required',
+   
+public function store(BannerRequest $request)
+{
+    $fields = $request->validated();
+    $fields['user_id'] = $request->user()->id;
 
+    $banner = $request->user()->banners()->create($fields);
 
-        ]);
-        $fields['user_id'] = $request->user()->id;
-
-
-
-        $banner =  $request->user()->banners()->create($fields);
-        return ["success" => true, 'data' => $banner->load('posts')];
-    }
-
+    return [
+        "success" => true,
+        'data' => $banner->load('posts')
+    ];
+}
     /**
      * Display the specified resource.
      */
@@ -65,10 +64,9 @@ class BannerController extends Controller implements HasMiddleware
             $banner->load([
                 'posts' => function ($query) {
                     $query->with('user')
-                         ->latest(); // Order posts by latest first
+                         ->latest(); 
                 },
-                // Add other relationships if needed
-                // 'user', 'otherRelationship'
+              
             ]);
     
             return response()->json([
@@ -89,14 +87,11 @@ class BannerController extends Controller implements HasMiddleware
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Banner $banner)
+    public function update(UpdateBannerRequest $request, Banner $banner)
     {
 
         Gate::authorize('modify', $banner);
-        $fields = $request->validate([
-            'title' => 'required|max:255',
-            'body' => 'required'
-        ]);
+        $fields = $request->validated();
 
 
 

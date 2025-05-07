@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PostRequest;
+use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
 
 use Illuminate\Http\Request;
@@ -22,16 +24,18 @@ class PostController extends Controller implements HasMiddleware
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(PostRequest $request)
     {
-       $fields = $request->validate([
-            'title' => 'required|max:255',
-            'body' => 'required',
-            'user_id' => 'required',
-            'banner_id' => 'required',
-       ]);
 
-      
+        // the rrequest fields are being called from th PostRequest class
+    //    $fields = $request->validate([
+    //         'title' => 'required|max:255',
+    //         'body' => 'required',
+    //         'user_id' => 'required',
+    //         'banner_id' => 'required',
+    //    ]);
+
+      $fields = $request->validated();
 
       $post =  $request->user()->posts()->create($fields);
        return ["success" => true,$post];
@@ -48,14 +52,11 @@ class PostController extends Controller implements HasMiddleware
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Post $post)
+    public function update(UpdatePostRequest $request, Post $post)
     {
 
         Gate::authorize('modify', $post);
-        $fields = $request->validate([
-            'title' => 'required|max:255',
-            'body' => 'required'
-       ]);
+        $fields = $request->validated();
 
       
 

@@ -11,7 +11,7 @@ class UpdateBannerRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,8 +21,9 @@ class UpdateBannerRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            //
+        return    [
+            'title' => 'required|max:255',
+            'body' => 'required'
         ];
     }
 }
