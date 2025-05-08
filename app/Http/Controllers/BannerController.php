@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BannerRequest;
 use App\Http\Requests\UpdateBannerRequest;
+use App\Http\Resources\BannerResource;
 use App\Models\Banner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,14 +21,14 @@ class BannerController extends Controller implements HasMiddleware
     public function index()
     {
         try {
+
             $banners = Banner::with(['posts.user'])->latest()->get();
-            
+
             return response()->json([
                 'success' => true,
-                'data' => $banners,
+                'data' => new BannerResource($banners),
                 'message' => 'Banners retrieved successfully'
             ]);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -37,44 +38,45 @@ class BannerController extends Controller implements HasMiddleware
         }
     }
 
-    
+
 
     /**
      * Store a newly created resource in storage.
      */
-   
-public function store(BannerRequest $request)
-{
-    $fields = $request->validated();
-    $fields['user_id'] = $request->user()->id;
 
-    $banner = $request->user()->banners()->create($fields);
+    public function store(BannerRequest $request)
+    {
+        try {
+            $fields = $request->validated();
+            $fields['user_id'] = $request->user()->id;
 
-    return [
-        "success" => true,
-        'data' => $banner->load('posts')
-    ];
-}
-    /**
-     * Display the specified resource.
-     */
+            $banner = $request->user()->banners()->create($fields);
+
+            return response()->json([
+                'success' => true,
+                'data' =>new BannerResource($banner ->load('posts')),
+                'message' => 'Banner created successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Banner creation failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
     public function show(Banner $banner)
     {
         try {
-            $banner->load([
-                'posts' => function ($query) {
-                    $query->with('user')
-                         ->latest(); 
-                },
-              
-            ]);
-    
+            $banner->load(['posts.user']);
+
             return response()->json([
                 'success' => true,
-                'data' => $banner,
+                'data' => new BannerResource($banner),
                 'message' => 'Banner retrieved successfully'
             ], 200);
-    
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -89,14 +91,21 @@ public function store(BannerRequest $request)
      */
     public function update(UpdateBannerRequest $request, Banner $banner)
     {
+        try {
+            Gate::authorize('modify', $banner);
+            $fields = $request->validated();
 
-        Gate::authorize('modify', $banner);
-        $fields = $request->validated();
 
 
-
-        $banner->update($fields);
-        return ["success" => true, "data" => $banner];
+            $banner->update($fields);
+            return ["success" => true, "data" =>new BannerResource($banner)];
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Banner update failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -104,9 +113,16 @@ public function store(BannerRequest $request)
      */
     public function destroy(Banner $banner)
     {
-
-        Gate::authorize('modify', $banner);
-        $banner->delete();
-        return ["success" => true, "message" => "Banner deleted"];
+        try {
+            Gate::authorize('modify', $banner);
+            $banner->delete();
+            return ["success" => true, "message" => "Banner deleted"];
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Banner delete failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
